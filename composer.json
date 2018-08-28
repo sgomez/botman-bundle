@@ -1,0 +1,57 @@
+{
+    "name": "sgomez/botman-bundle",
+    "description": "BotMan integration for Symfony",
+    "authors": [
+        {
+            "name": "Sergio Gómez",
+            "email": "sergio@uco.es"
+        }
+    ],
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^7.2",
+        "ext-curl": "*",
+        "ext-json": "*",
+        "botman/botman": "^2.4",
+        "php-http/client-common": "^1.7",
+        "php-http/client-implementation": "^1.0",
+        "symfony/cache": "^3.4|^4.0",
+        "symfony/config": "^3.4|^4.0",
+        "symfony/console": "^3.4|^4.0",
+        "symfony/dependency-injection": "^3.4|^4.0",
+        "symfony/http-foundation": "^3.4|^4.0",
+        "symfony/http-kernel": "^3.4|^4.0",
+        "symfony/routing": "^3.4|^4.0",
+        "tightenco/collect": "^5.6"
+    },
+    "require-dev": {
+        "botman/driver-telegram": "^1.5",
+        "illuminate/support": "^5.6",
+        "php-http/guzzle6-adapter": "^1.1",
+        "php-http/httplug-bundle": "^1.11",
+        "phpstan/phpstan": "^0.10.3",
+        "phpstan/phpstan-symfony": "^0.10.1",
+        "symplify/easy-coding-standard": "^4.6"
+    },
+    "suggest": {
+        "botman/driver-telegram": "^1.5",
+        "php-http/httplug-bundle": "^1.11"
+    },
+    "config": {
+        "preferred-install": {
+            "*": "dist"
+        },
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "Sgomez\\Bundle\\BotmanBundle\\": "src/"
+        }
+    },
+    "scripts": {
+        "check-cs": "vendor/bin/ecs check src",
+        "fix-cs": "vendor/bin/ecs check --fix src",
+        "phpstan": "vendor/bin/phpstan analyse src --level max"
+    }
+}

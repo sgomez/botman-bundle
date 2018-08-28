@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="botman" class="BotMan\BotMan\BotMan">
+            <factory class="Sgomez\Bundle\BotmanBundle\DependencyInjection\BotmanFactory" method="create" />
+            <argument type="service" id="service_container" />
+            <argument type="service" id="Symfony\Component\Cache\Adapter\AdapterInterface" />
+            <argument type="service" id="request_stack" />
+            <argument>%botman.drivers%</argument>
+        </service>
+
+        <service id="BotMan\BotMan\BotMan" alias="botman" />
+
+        <service id="Sgomez\Bundle\BotmanBundle\Routing\WebhookControllerLoader">
+            <argument type="service" id="parameter_bag" />
+            <tag name="routing.loader" />
+        </service>
+
+        <service id="botman.http_client" class="Http\Client\Common\HttpMethodsClient" public="true">
+            <argument type="service" id="botman.http.client" />
+            <argument type="service" id="botman.http.message_factory" />
+        </service>
+    </services>
+</container>
