@@ -7,7 +7,7 @@
             "email": "sergio@uco.es"
         }
     ],
-    "type": "library",
+    "type": "symfony-bundle",
     "license": "MIT",
     "require": {
         "php": "^7.2",
