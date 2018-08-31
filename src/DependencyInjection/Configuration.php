@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Sgomez\Bundle\BotmanBundle\DependencyInjection;
 
-use BotMan\BotMan\Interfaces\DriverInterface;
 use BotMan\Drivers\Telegram\TelegramDriver;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -32,7 +31,7 @@ class Configuration implements ConfigurationInterface
         $root
             ->children()
                 ->scalarNode('controller')
-                    ->defaultValue('\App\Controller\WebhookController')
+                    ->defaultValue('App\Controller\WebhookController')
                     ->validate()
                         ->ifTrue(function ($v) {
                             return !\class_exists($v);
@@ -45,7 +44,7 @@ class Configuration implements ConfigurationInterface
                 ->end()
                 ->arrayNode('drivers')
                     ->children()
-                        ->append($this->addDriverDefinition('telegram', TelegramDriver::class, '/webhook/telegram', ['token']))
+                        ->append($this->addDriverDefinition('telegram', TelegramDriver::class, ['token' => 'scalar']))
                     ->end()
                 ->end()
                 ->append($this->addHttpNode())
@@ -55,7 +54,7 @@ class Configuration implements ConfigurationInterface
         return $treeBuilder;
     }
 
-    private function addDriverDefinition(string $name, string $driver, string $path, array $params): NodeDefinition
+    private function addDriverDefinition(string $name, string $driver, array $params): NodeDefinition
     {
         $treeBuilder = new TreeBuilder();
         $node = $treeBuilder->root($name);
@@ -65,11 +64,11 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('class')
                     ->defaultValue($driver)
                     ->validate()
-                        ->ifTrue(function ($v) {
-                            return !is_subclass_of($v, DriverInterface::class)
+                        ->ifTrue(function ($v) use ($driver) {
+                            return !is_subclass_of($v, $driver)
                                 ;
                         })
-                        ->thenInvalid('Class \'%s\' must be a valid botman driver')
+                        ->thenInvalid('Class \'%s\' must be a valid ' . $name . ' botman driver')
                     ->end()
                 ->end()
                 ->append($this->addDriverOptions($params))
@@ -83,12 +82,13 @@ class Configuration implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder();
         $node = $treeBuilder->root('parameters');
+        $node->isRequired()->ignoreExtraKeys();
+
         $children = $node->children();
 
-        foreach ($params as $param) {
-            $children->scalarNode($param)->isRequired()->end();
+        foreach ($params as $name => $type) {
+            $children->node($name, $type)->isRequired()->end();
         }
-
         $node = $children->end();
 
         return $node;
