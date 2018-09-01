@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Sgomez\Bundle\BotmanBundle\DependencyInjection;
 
+use BotMan\Drivers\Facebook\FacebookDriver;
 use BotMan\Drivers\Telegram\TelegramDriver;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -45,6 +46,7 @@ class Configuration implements ConfigurationInterface
                 ->arrayNode('drivers')
                     ->children()
                         ->append($this->addTelegramConfiguration())
+                        ->append($this->addFacebookConfiguration())
                     ->end()
                 ->end()
                 ->append($this->addHttpNode())
@@ -52,6 +54,56 @@ class Configuration implements ConfigurationInterface
         ;
 
         return $treeBuilder;
+    }
+
+    private function addFacebookConfiguration(): NodeDefinition
+    {
+        $treeBuilder = new TreeBuilder();
+        $node = $treeBuilder->root('facebook');
+
+        $node
+            ->children()
+                ->scalarNode('class')
+                    ->defaultValue(FacebookDriver::class)
+                    ->validate()
+                        ->ifTrue(function ($v) {
+                            return !\is_subclass_of($v, FacebookDriver::class);
+                        })
+                        ->thenInvalid('Class \'%s\' must be a valid Facebook BotMan driver.')
+                    ->end()
+                ->end()
+                ->arrayNode('parameters')
+                    ->isRequired()
+                    ->children()
+                        ->scalarNode('token')->isRequired()->cannotBeEmpty()->end()
+                        ->scalarNode('app_secret')->isRequired()->cannotBeEmpty()->end()
+                        ->scalarNode('verification')->isRequired()->cannotBeEmpty()->end()
+                        ->scalarNode('start_button_payload')->end()
+                        ->arrayNode('greeting')
+                            ->requiresAtLeastOneElement()
+                            ->arrayPrototype()
+                                ->children()
+                                    ->scalarNode('locale')->isRequired()->cannotBeEmpty()->end()
+                                    ->scalarNode('text')->isRequired()->cannotBeEmpty()->end()
+                                ->end()
+                            ->end()
+                            ->validate()
+                                ->ifTrue(function (array $greetings): bool {
+                                    return !\array_reduce($greetings, function ($carry, $greeting) {
+                                        return $carry || 'default' === $greeting['locale'];
+                                    }, false);
+                                })
+                                ->thenInvalid('Default locale must be defined.')
+                                ->ifEmpty()
+                                ->thenUnset()
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
+            ->end()
+        ;
+
+        return $node;
     }
 
     private function addTelegramConfiguration(): NodeDefinition
