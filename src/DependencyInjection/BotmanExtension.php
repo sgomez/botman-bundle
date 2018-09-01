@@ -65,6 +65,10 @@ final class BotmanExtension extends ConfigurableExtension
             $container->getDefinition('botman.http_client'),
             $config['parameters']['token'],
         ]);
+
+        $this->registerCommands([
+            FacebookInfoCommand::class,
+        ], $container);
     }
 
     private function configureTelegramClient(array $config, ContainerBuilder $container): void
