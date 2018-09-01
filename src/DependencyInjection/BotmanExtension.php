@@ -67,6 +67,7 @@ final class BotmanExtension extends ConfigurableExtension
         ]);
 
         $this->registerCommands([
+            FacebookGreetingCommand::class,
             FacebookInfoCommand::class,
             FacebookStartButtonCommand::class,
         ], $container);
