@@ -35,6 +35,10 @@ final class BotmanExtension extends ConfigurableExtension
 
         $this->createHttplugClient($mergedConfig, $container);
 
+        if (!isset($mergedConfig['drivers'])) {
+            $mergedConfig['drivers'] = [];
+        }
+
         $drivers = [];
         foreach ($mergedConfig['drivers'] as $driver => $options) {
             $drivers[$driver] = $options;
