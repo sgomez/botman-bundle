@@ -20,25 +20,24 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class FacebookGreetingCommand extends Command
 {
     /**
-     * @var ParameterBagInterface
-     */
-    private $parameterBag;
-    /**
      * @var FacebookClient
      */
     private $client;
+    /**
+     * @var array
+     */
+    private $greeting;
 
-    public function __construct(ParameterBagInterface $parameterBag, FacebookClient $client)
+    public function __construct(FacebookClient $client, array $greeting)
     {
         parent::__construct();
 
-        $this->parameterBag = $parameterBag;
         $this->client = $client;
+        $this->greeting = $greeting;
     }
 
     protected function configure(): void
@@ -64,20 +63,17 @@ class FacebookGreetingCommand extends Command
                 return;
             }
 
-            $config = $this->parameterBag->get('botman.drivers');
-            if (!isset($config['facebook']['parameters']['greeting']) || empty($config['facebook']['parameters']['greeting'])) {
+            if (empty($this->greeting)) {
                 $io->error('Parameter `greeting` must be configured in `botman.drivers.facebook.parameters` config path.');
 
                 return;
             }
 
-            $this->client->setGreetingText($config['facebook']['parameters']['greeting']);
+            $this->client->setGreetingText($this->greeting);
+
+            $io->success('`Greeting` message configured.');
         } catch (FacebookClientException $e) {
             $io->error($e->getMessage());
-
-            return;
         }
-
-        $io->success('`Greeting` message configured.');
     }
 }

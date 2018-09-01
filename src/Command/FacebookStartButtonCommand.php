@@ -20,25 +20,24 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class FacebookStartButtonCommand extends Command
 {
     /**
-     * @var ParameterBagInterface
-     */
-    private $parameterBag;
-    /**
      * @var FacebookClient
      */
     private $client;
+    /**
+     * @var null|string
+     */
+    private $payload;
 
-    public function __construct(ParameterBagInterface $parameterBag, FacebookClient $client)
+    public function __construct(FacebookClient $client, ?string $payload)
     {
         parent::__construct();
 
-        $this->parameterBag = $parameterBag;
         $this->client = $client;
+        $this->payload = $payload;
     }
 
     protected function configure(): void
@@ -64,20 +63,17 @@ class FacebookStartButtonCommand extends Command
                 return;
             }
 
-            $config = $this->parameterBag->get('botman.drivers');
-            if (!isset($config['facebook']['parameters']['start_button_payload']) || empty($config['facebook']['parameters']['start_button_payload'])) {
-                $io->error('Parameter `greeting` must be configured in `botman.drivers.facebook.start_button_payload` config path.');
+            if (null === $this->payload) {
+                $io->error('Parameter `start_button_payload` must be configured in `botman.driver.facebook.start_button_payload` config path.');
 
                 return;
             }
 
-            $this->client->setGetStarted($config['facebook']['parameters']['start_button_payload']);
+            $this->client->setGetStarted($this->payload);
+
+            $io->success('`Get started` button payload configured.');
         } catch (FacebookClientException $e) {
             $io->error($e->getMessage());
-
-            return;
         }
-
-        $io->success('`Get started` button payload configured.');
     }
 }

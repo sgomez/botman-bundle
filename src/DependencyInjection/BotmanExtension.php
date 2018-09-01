@@ -13,13 +13,6 @@ declare(strict_types=1);
 
 namespace Sgomez\Bundle\BotmanBundle\DependencyInjection;
 
-use Sgomez\Bundle\BotmanBundle\Command\FacebookGreetingCommand;
-use Sgomez\Bundle\BotmanBundle\Command\FacebookInfoCommand;
-use Sgomez\Bundle\BotmanBundle\Command\FacebookStartButtonCommand;
-use Sgomez\Bundle\BotmanBundle\Command\TelegramMeCommand;
-use Sgomez\Bundle\BotmanBundle\Command\TelegramWebhookCommand;
-use Sgomez\Bundle\BotmanBundle\Services\Http\FacebookClient;
-use Sgomez\Bundle\BotmanBundle\Services\Http\TelegramClient;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Alias;
@@ -45,61 +38,15 @@ final class BotmanExtension extends ConfigurableExtension
         $drivers = [];
         foreach ($mergedConfig['drivers'] as $driver => $options) {
             $drivers[$driver] = $options;
+
+            foreach ($options['parameters'] as $parameter => $value) {
+                $container->setParameter(sprintf('botman.driver.%s.%s', $driver, $parameter), $value);
+            }
+
+            $loader->load($driver . '.xml');
         }
+
         $container->setParameter('botman.drivers', $drivers);
-
-        $this->configureFacebookClient($mergedConfig, $container);
-        $this->configureTelegramClient($mergedConfig, $container);
-    }
-
-    private function configureFacebookClient(array $config, ContainerBuilder $container): void
-    {
-        if (!isset($config['drivers']['facebook'])) {
-            return;
-        }
-
-        $config = $config['drivers']['facebook'];
-
-        $facebookClient = $container->register(FacebookClient::class);
-        $facebookClient->setArguments([
-            $container->getDefinition('botman.http_client'),
-            $config['parameters']['token'],
-        ]);
-
-        $this->registerCommands([
-            FacebookGreetingCommand::class,
-            FacebookInfoCommand::class,
-            FacebookStartButtonCommand::class,
-        ], $container);
-    }
-
-    private function configureTelegramClient(array $config, ContainerBuilder $container): void
-    {
-        if (!isset($config['drivers']['telegram'])) {
-            return;
-        }
-
-        $config = $config['drivers']['telegram'];
-
-        $telegramClient = $container->register(TelegramClient::class);
-        $telegramClient->setArguments([
-            $container->getDefinition('botman.http_client'),
-            $config['parameters']['token'],
-        ]);
-
-        $this->registerCommands([
-            TelegramMeCommand::class,
-            TelegramWebhookCommand::class,
-        ], $container);
-    }
-
-    private function registerCommands(array $commands, ContainerBuilder $container): void
-    {
-        foreach ($commands as $command) {
-            $container->register($command)
-                ->setAutowired(true)
-                ->setAutoconfigured(true);
-        }
     }
 
     private function createHttplugClient(array $config, ContainerBuilder $container): void

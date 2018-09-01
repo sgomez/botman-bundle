@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="botman.driver.facebook.client" class="Sgomez\Bundle\BotmanBundle\Services\Http\FacebookClient">
+            <argument type="service" id="botman.http_client"/>
+            <argument>%botman.driver.facebook.token%</argument>
+        </service>
+
+        <service id="Sgomez\Bundle\BotmanBundle\Services\Http\FacebookClient" alias="botman.driver.facebook.client" />
+
+        <service id="Sgomez\Bundle\BotmanBundle\Command\FacebookGreetingCommand">
+            <argument type="service" id="botman.driver.facebook.client" />
+            <argument>%botman.driver.facebook.greeting%</argument>
+            <tag name="console.command" />
+        </service>
+
+        <service id="Sgomez\Bundle\BotmanBundle\Command\FacebookInfoCommand">
+            <argument type="service" id="botman.driver.facebook.client" />
+            <tag name="console.command" />
+        </service>
+
+        <service id="Sgomez\Bundle\BotmanBundle\Command\FacebookStartButtonCommand">
+            <argument type="service" id="botman.driver.facebook.client" />
+            <argument>%botman.driver.facebook.start_button_payload%</argument>
+            <tag name="console.command" />
+        </service>
+    </services>
+</container>

@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="botman.driver.telegram.client" class="Sgomez\Bundle\BotmanBundle\Services\Http\TelegramClient">
+            <argument type="service" id="botman.http_client"/>
+            <argument>%botman.driver.telegram.token%</argument>
+        </service>
+
+        <service id="Sgomez\Bundle\BotmanBundle\Services\Http\TelegramClient" alias="botman.driver.telegram.client" />
+
+        <service id="Sgomez\Bundle\BotmanBundle\Command\TelegramMeCommand">
+            <argument type="service" id="botman.driver.telegram.client" />
+            <tag name="console.command" />
+        </service>
+
+        <service id="Sgomez\Bundle\BotmanBundle\Command\TelegramWebhookCommand">
+            <argument type="service" id="botman.driver.telegram.client" />
+            <argument type="service" id="router" />
+            <tag name="console.command" />
+        </service>
+    </services>
+</container>
