@@ -28,5 +28,11 @@
             <argument>%botman.driver.facebook.start_button_payload%</argument>
             <tag name="console.command" />
         </service>
+
+        <service id="Sgomez\Bundle\BotmanBundle\Command\FacebookWhitelistDomainsCommand">
+            <argument type="service" id="botman.driver.facebook.client" />
+            <argument>%botman.driver.facebook.whitelisted_domains%</argument>
+            <tag name="console.command" />
+        </service>
     </services>
 </container>

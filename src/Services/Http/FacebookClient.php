@@ -54,6 +54,11 @@ final class FacebookClient
         return $this->setProperty('payload', ['get_started' => ['payload' => $payload]]);
     }
 
+    public function setWhitelistedDomains(array $whitelisteDomains): array
+    {
+        return $this->setProperty('whitelisted_domains', ['whitelisted_domains' => $whitelisteDomains]);
+    }
+
     public function unsetProperty(string $property): array
     {
         if (!\in_array($property, self::$properties, true)) {
