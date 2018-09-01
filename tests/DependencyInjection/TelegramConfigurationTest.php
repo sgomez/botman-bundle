@@ -13,9 +13,7 @@ declare(strict_types=1);
 
 namespace Sgomez\Bundle\BotmanBundle\Tests\DependencyInjection;
 
-use App\BotMan\Drivers\Generic\MyTelegramDriver;
-use BotMan\BotMan\Interfaces\DriverInterface;
-use BotMan\Drivers\Telegram\TelegramDriver;
+use BotMan\BotMan\Drivers\NullDriver;
 use Matthias\SymfonyConfigTest\PhpUnit\ConfigurationTestCaseTrait;
 use PHPUnit\Framework\TestCase;
 use Sgomez\Bundle\BotmanBundle\DependencyInjection\Configuration;
@@ -29,41 +27,44 @@ class TelegramConfigurationTest extends TestCase
         return new Configuration();
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function it_pass_with_valid_configuration(): void
     {
-        $this->assertProcessedConfigurationEquals(
+        $this->assertConfigurationIsValid([
+            [
+                'drivers' => [
+                    'telegram' => [
+                        'parameters' => [
+                            'token' => 'my-token',
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /** @test */
+    public function it_requires_a_valid_driver(): void
+    {
+        $this->assertConfigurationIsInvalid(
             [
                 [
                     'drivers' => [
                         'telegram' => [
+                            'class' => NullDriver::class,
                             'parameters' => [
-                                'token' => 'my-bot-secret',
+                                'token' => 'my-token',
                             ],
                         ],
                     ],
                 ],
             ],
-            [
-                'drivers' => [
-                    'telegram' => [
-                        'class' => TelegramDriver::class,
-                        'parameters' => [
-                            'token' => 'my-bot-secret',
-                        ],
-                    ],
-                ],
-            ],
-        'drivers'
+            'must be a valid Telegram BotMan driver'
         );
     }
 
-    /**
-     * @test
-     */
-    public function it_requires_token_parameter(): void
+    /** @test */
+    public function it_requires_parameters(): void
     {
         $this->assertConfigurationIsInvalid(
             [
@@ -76,14 +77,17 @@ class TelegramConfigurationTest extends TestCase
             ],
             'The child node "parameters" at path "botman.drivers.telegram" must be configured.'
         );
+    }
 
+    /** @test */
+    public function it_requires_token_parameter(): void
+    {
         $this->assertConfigurationIsInvalid(
             [
                 [
                     'drivers' => [
                         'telegram' => [
                             'parameters' => [
-                                'secret' => 'my-bot-secret',
                             ],
                         ],
                     ],
@@ -91,48 +95,5 @@ class TelegramConfigurationTest extends TestCase
             ],
             'The child node "token" at path "botman.drivers.telegram.parameters" must be configured.'
         );
-    }
-
-    /**
-     * @test
-     */
-    public function it_requires_valid_telegram_driver(): void
-    {
-        $driver = $this->getMockBuilder(DriverInterface::class)->getMock();
-
-        $this->assertConfigurationIsInvalid(
-            [
-                [
-                    'drivers' => [
-                        'telegram' => [
-                            'class' => \get_class($driver),
-                            'parameters' => [
-                                'token' => 'my-bot-secret',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            'must be a valid telegram botman driver'
-        );
-    }
-
-    /**
-     * @test
-     */
-    public function it_can_use_extended_telegram_driver(): void
-    {
-        $this->assertConfigurationIsValid([
-            [
-                'drivers' => [
-                    'telegram' => [
-                        'class' => MyTelegramDriver::class,
-                        'parameters' => [
-                            'token' => 'my-bot-secret',
-                        ],
-                    ],
-                ],
-            ],
-        ]);
     }
 }

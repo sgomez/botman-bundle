@@ -44,7 +44,7 @@ class Configuration implements ConfigurationInterface
                 ->end()
                 ->arrayNode('drivers')
                     ->children()
-                        ->append($this->addDriverDefinition('telegram', TelegramDriver::class, ['token' => 'scalar']))
+                        ->append($this->addTelegramConfiguration())
                     ->end()
                 ->end()
                 ->append($this->addHttpNode())
@@ -54,42 +54,30 @@ class Configuration implements ConfigurationInterface
         return $treeBuilder;
     }
 
-    private function addDriverDefinition(string $name, string $driver, array $params): NodeDefinition
+    private function addTelegramConfiguration(): NodeDefinition
     {
         $treeBuilder = new TreeBuilder();
-        $node = $treeBuilder->root($name);
+        $node = $treeBuilder->root('telegram');
 
         $node
             ->children()
                 ->scalarNode('class')
-                    ->defaultValue($driver)
+                    ->defaultValue(TelegramDriver::class)
                     ->validate()
-                        ->ifTrue(function ($v) use ($driver) {
-                            return !is_subclass_of($v, $driver)
-                                ;
+                        ->ifTrue(function ($v) {
+                            return !\is_subclass_of($v, TelegramDriver::class);
                         })
-                        ->thenInvalid('Class \'%s\' must be a valid ' . $name . ' botman driver')
+                        ->thenInvalid('Class \'%s\' must be a valid Telegram BotMan driver.')
                     ->end()
                 ->end()
-                ->append($this->addDriverOptions($params))
+                ->arrayNode('parameters')
+                    ->isRequired()
+                    ->children()
+                        ->scalarNode('token')->isRequired()->cannotBeEmpty()->end()
+                    ->end()
+                ->end()
             ->end()
         ;
-
-        return $node;
-    }
-
-    private function addDriverOptions(array $params): NodeDefinition
-    {
-        $treeBuilder = new TreeBuilder();
-        $node = $treeBuilder->root('parameters');
-        $node->isRequired()->ignoreExtraKeys();
-
-        $children = $node->children();
-
-        foreach ($params as $name => $type) {
-            $children->node($name, $type)->isRequired()->end();
-        }
-        $node = $children->end();
 
         return $node;
     }
