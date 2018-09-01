@@ -50,7 +50,6 @@ final class WebhookControllerLoader extends Loader
             $path = $this->params->get('botman.path');
 
             $route = new Route($path, ['_controller' => $controller]);
-            $route->setMethods(['POST']);
             $routes->add(
                 'botman_webhook',
                 $route
