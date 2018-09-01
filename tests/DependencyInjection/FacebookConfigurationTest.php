@@ -38,15 +38,18 @@ class FacebookConfigurationTest extends TestCase
                 'drivers' => [
                     'facebook' => [
                         'parameters' => [
+                            // mandatory
                             'token' => 'my-token',
                             'app_secret' => 'my-app-secret',
                             'verification' => 'my-verification',
+                            // optional
+                            'start_button_payload' => 'start-button-pressed-event',
+                            'whitelisted_domains' => ['host-a.domain.com', 'host-b.domain.com'],
                             'greeting' => [
                                 ['locale' => 'default', 'text' => 'Hi'],
                                 ['locale' => 'es', 'text' => 'Hola'],
                                 ['locale' => 'pt', 'text' => 'Oi'],
                             ],
-                            'start_button_payload' => 'start-button-pressed-event',
                         ],
                     ],
                 ],
@@ -153,7 +156,7 @@ class FacebookConfigurationTest extends TestCase
     }
 
     /** @test */
-    public function its_greeting_parameter_must_be_unset_if_it_is_not_defined(): void
+    public function its_empty_parameters_must_be_set(): void
     {
         $this->assertProcessedConfigurationEquals(
             [
@@ -176,7 +179,9 @@ class FacebookConfigurationTest extends TestCase
                             'token' => 'my-token',
                             'app_secret' => 'my-app-secret',
                             'verification' => 'my-verification',
+                            'start_button_payload' => null,
                             'greeting' => [],
+                            'whitelisted_domains' => [],
                         ],
                     ],
                 ],
