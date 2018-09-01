@@ -13,8 +13,12 @@ declare(strict_types=1);
 
 namespace Sgomez\Bundle\BotmanBundle\DependencyInjection;
 
+use Sgomez\Bundle\BotmanBundle\Command\FacebookGreetingCommand;
+use Sgomez\Bundle\BotmanBundle\Command\FacebookInfoCommand;
+use Sgomez\Bundle\BotmanBundle\Command\FacebookStartButtonCommand;
 use Sgomez\Bundle\BotmanBundle\Command\TelegramMeCommand;
 use Sgomez\Bundle\BotmanBundle\Command\TelegramWebhookCommand;
+use Sgomez\Bundle\BotmanBundle\Services\Http\FacebookClient;
 use Sgomez\Bundle\BotmanBundle\Services\Http\TelegramClient;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\FileLocator;
@@ -44,7 +48,23 @@ final class BotmanExtension extends ConfigurableExtension
         }
         $container->setParameter('botman.drivers', $drivers);
 
+        $this->configureFacebookClient($mergedConfig, $container);
         $this->configureTelegramClient($mergedConfig, $container);
+    }
+
+    private function configureFacebookClient(array $config, ContainerBuilder $container): void
+    {
+        if (!isset($config['drivers']['facebook'])) {
+            return;
+        }
+
+        $config = $config['drivers']['facebook'];
+
+        $facebookClient = $container->register(FacebookClient::class);
+        $facebookClient->setArguments([
+            $container->getDefinition('botman.http_client'),
+            $config['parameters']['token'],
+        ]);
     }
 
     private function configureTelegramClient(array $config, ContainerBuilder $container): void
@@ -54,7 +74,6 @@ final class BotmanExtension extends ConfigurableExtension
         }
 
         $config = $config['drivers']['telegram'];
-
 
         $telegramClient = $container->register(TelegramClient::class);
         $telegramClient->setArguments([
