@@ -19,7 +19,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class TelegramMeCommand extends Command
+class TelegramInfoCommand extends Command
 {
     /**
      * @var TelegramClient
@@ -40,6 +40,7 @@ class TelegramMeCommand extends Command
     {
         $this
             ->setName('botman:telegram:info')
+            ->setDescription('Retrieve the current values of Telegram bot and its webhook status')
         ;
     }
 

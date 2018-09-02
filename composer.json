@@ -26,12 +26,28 @@
         "tightenco/collect": "^5.6"
     },
     "require-dev": {
-        "botman/driver-telegram": "^1.5",
+        "botman/driver-amazon-alexa": "^1.0",
+        "botman/driver-botframework": "^1.0",
+        "botman/driver-cisco-spark": "^1.0",
+        "botman/driver-facebook": "^1.0",
+        "botman/driver-hangouts": "^1.0",
+        "botman/driver-hipchat": "^1.0",
+        "botman/driver-kik": "^1.0",
+        "botman/driver-nexmo": "^1.0",
+        "botman/driver-slack": "^2.0",
+        "botman/driver-telegram": "^1.0",
+        "botman/driver-twilio": "^1.0",
+        "botman/driver-twitter": "^1.0",
+        "botman/driver-wechat": "^1.0",
         "illuminate/support": "^5.6",
+        "matthiasnoback/symfony-config-test": "^4.0",
+        "matthiasnoback/symfony-dependency-injection-test": "^3.0",
         "php-http/guzzle6-adapter": "^1.1",
         "php-http/httplug-bundle": "^1.11",
         "phpstan/phpstan": "^0.10.3",
+        "phpstan/phpstan-phpunit": "^0.10.0",
         "phpstan/phpstan-symfony": "^0.10.1",
+        "phpunit/phpunit": "^7.3",
         "symplify/easy-coding-standard": "^4.6"
     },
     "suggest": {
@@ -49,9 +65,15 @@
             "Sgomez\\Bundle\\BotmanBundle\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Sgomez\\Bundle\\BotmanBundle\\Tests\\": "tests/",
+            "App\\": "tests/Fixtures/App"
+        }
+    },
     "scripts": {
-        "check-cs": "vendor/bin/ecs check src",
-        "fix-cs": "vendor/bin/ecs check --fix src",
-        "phpstan": "vendor/bin/phpstan analyse src --level max"
+        "check-cs": "vendor/bin/ecs check src tests",
+        "fix-cs": "vendor/bin/ecs check --fix src tests",
+        "phpstan": "vendor/bin/phpstan analyse src tests --level max"
     }
 }

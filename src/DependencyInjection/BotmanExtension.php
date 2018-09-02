@@ -13,9 +13,6 @@ declare(strict_types=1);
 
 namespace Sgomez\Bundle\BotmanBundle\DependencyInjection;
 
-use Sgomez\Bundle\BotmanBundle\Command\TelegramMeCommand;
-use Sgomez\Bundle\BotmanBundle\Command\TelegramWebhookCommand;
-use Sgomez\Bundle\BotmanBundle\Services\Http\TelegramClient;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Alias;
@@ -38,43 +35,22 @@ final class BotmanExtension extends ConfigurableExtension
 
         $this->createHttplugClient($mergedConfig, $container);
 
+        if (!isset($mergedConfig['drivers'])) {
+            $mergedConfig['drivers'] = [];
+        }
+
         $drivers = [];
         foreach ($mergedConfig['drivers'] as $driver => $options) {
             $drivers[$driver] = $options;
+
+            foreach ($options['parameters'] as $parameter => $value) {
+                $container->setParameter(sprintf('botman.driver.%s.%s', $driver, $parameter), $value);
+            }
+
+            $loader->load($driver . '.xml');
         }
+
         $container->setParameter('botman.drivers', $drivers);
-
-        $this->configureTelegramClient($mergedConfig, $container);
-    }
-
-    private function configureTelegramClient(array $config, ContainerBuilder $container): void
-    {
-        if (!isset($config['drivers']['telegram'])) {
-            return;
-        }
-
-        $config = $config['drivers']['telegram'];
-
-
-        $telegramClient = $container->register(TelegramClient::class);
-        $telegramClient->setArguments([
-            $container->getDefinition('botman.http_client'),
-            $config['parameters']['token'],
-        ]);
-
-        $this->registerCommands([
-            TelegramMeCommand::class,
-            TelegramWebhookCommand::class,
-        ], $container);
-    }
-
-    private function registerCommands(array $commands, ContainerBuilder $container): void
-    {
-        foreach ($commands as $command) {
-            $container->register($command)
-                ->setAutowired(true)
-                ->setAutoconfigured(true);
-        }
     }
 
     private function createHttplugClient(array $config, ContainerBuilder $container): void

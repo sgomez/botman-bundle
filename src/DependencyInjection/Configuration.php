@@ -13,11 +13,12 @@ declare(strict_types=1);
 
 namespace Sgomez\Bundle\BotmanBundle\DependencyInjection;
 
-use BotMan\BotMan\Interfaces\DriverInterface;
+use BotMan\Drivers\Facebook\FacebookDriver;
 use BotMan\Drivers\Telegram\TelegramDriver;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 class Configuration implements ConfigurationInterface
 {
@@ -32,7 +33,7 @@ class Configuration implements ConfigurationInterface
         $root
             ->children()
                 ->scalarNode('controller')
-                    ->defaultValue('\App\Controller\WebhookController')
+                    ->defaultValue('App\Controller\WebhookController')
                     ->validate()
                         ->ifTrue(function ($v) {
                             return !\class_exists($v);
@@ -40,12 +41,15 @@ class Configuration implements ConfigurationInterface
                         ->thenInvalid('Webhook controller class \'%s\' does not exist')
                     ->end()
                 ->end()
+
                 ->scalarNode('path')
                     ->defaultValue('/botman')
                 ->end()
+
                 ->arrayNode('drivers')
                     ->children()
-                        ->append($this->addDriverDefinition('telegram', TelegramDriver::class, '/webhook/telegram', ['token']))
+                        ->append($this->addTelegramConfiguration())
+                        ->append($this->addFacebookConfiguration())
                     ->end()
                 ->end()
                 ->append($this->addHttpNode())
@@ -55,41 +59,95 @@ class Configuration implements ConfigurationInterface
         return $treeBuilder;
     }
 
-    private function addDriverDefinition(string $name, string $driver, string $path, array $params): NodeDefinition
+    private function addFacebookConfiguration(): NodeDefinition
     {
         $treeBuilder = new TreeBuilder();
-        $node = $treeBuilder->root($name);
+        $node = $treeBuilder->root('facebook');
 
         $node
             ->children()
                 ->scalarNode('class')
-                    ->defaultValue($driver)
+                    ->defaultValue(FacebookDriver::class)
                     ->validate()
                         ->ifTrue(function ($v) {
-                            return !is_subclass_of($v, DriverInterface::class)
-                                ;
+                            return !\is_subclass_of($v, FacebookDriver::class);
                         })
-                        ->thenInvalid('Class \'%s\' must be a valid botman driver')
+                        ->thenInvalid('Class \'%s\' must be a valid Facebook BotMan driver.')
                     ->end()
                 ->end()
-                ->append($this->addDriverOptions($params))
+
+                ->arrayNode('parameters')
+                    ->isRequired()
+                    ->children()
+                        ->scalarNode('token')->isRequired()->cannotBeEmpty()->end()
+                        ->scalarNode('app_secret')->isRequired()->cannotBeEmpty()->end()
+                        ->scalarNode('verification')->isRequired()->cannotBeEmpty()->end()
+                        ->scalarNode('start_button_payload')->defaultNull()->end()
+                        ->arrayNode('greeting')
+                            ->validate()
+                                ->always(function ($v) {
+                                    foreach ($v as ['locale' => $locale]) {
+                                        if (isset($locales[$locale])) {
+                                            throw new InvalidConfigurationException(sprintf(
+                                                'Duplicated `botman.drivers.facebook.greeting.locale`: `%s`.',
+                                                $locale
+                                            ));
+                                        }
+
+                                        $locales[$locale] = 1;
+                                    }
+
+                                    if (!isset($locales['default'])) {
+                                        throw new InvalidConfigurationException('Default locale must be defined in `botman.drivers.facebook.greeting.locale`.');
+                                    }
+
+                                    return $v;
+                                })
+                            ->end()
+                            ->requiresAtLeastOneElement()
+                            ->arrayPrototype()
+                                ->children()
+                                    ->scalarNode('locale')->isRequired()->cannotBeEmpty()->end()
+                                    ->scalarNode('text')->isRequired()->cannotBeEmpty()->end()
+                                ->end()
+                            ->end()
+                        ->end()
+                        ->arrayNode('whitelisted_domains')
+                            ->scalarPrototype()->end()
+                        ->end()
+                    ->end()
+                ->end()
             ->end()
         ;
 
         return $node;
     }
 
-    private function addDriverOptions(array $params): NodeDefinition
+    private function addTelegramConfiguration(): NodeDefinition
     {
         $treeBuilder = new TreeBuilder();
-        $node = $treeBuilder->root('parameters');
-        $children = $node->children();
+        $node = $treeBuilder->root('telegram');
 
-        foreach ($params as $param) {
-            $children->scalarNode($param)->isRequired()->end();
-        }
+        $node
+            ->children()
+                ->scalarNode('class')
+                    ->defaultValue(TelegramDriver::class)
+                    ->validate()
+                        ->ifTrue(function ($v) {
+                            return !\is_subclass_of($v, TelegramDriver::class);
+                        })
+                        ->thenInvalid('Class \'%s\' must be a valid Telegram BotMan driver.')
+                    ->end()
+                ->end()
 
-        $node = $children->end();
+                ->arrayNode('parameters')
+                    ->isRequired()
+                    ->children()
+                        ->scalarNode('token')->isRequired()->cannotBeEmpty()->end()
+                    ->end()
+                ->end()
+            ->end()
+        ;
 
         return $node;
     }
@@ -102,8 +160,13 @@ class Configuration implements ConfigurationInterface
         $node
             ->addDefaultsIfNotSet()
             ->children()
-                ->scalarNode('client')->defaultValue('httplug.client.default')->end()
-                ->scalarNode('message_factory')->defaultValue('httplug.message_factory.default')->end()
+                ->scalarNode('client')
+                    ->defaultValue('httplug.client.default')
+                ->end()
+
+                ->scalarNode('message_factory')
+                    ->defaultValue('httplug.message_factory.default')
+                ->end()
             ->end()
         ;
 
