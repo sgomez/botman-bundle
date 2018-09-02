@@ -18,6 +18,7 @@ use BotMan\Drivers\Telegram\TelegramDriver;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 class Configuration implements ConfigurationInterface
 {
@@ -80,22 +81,29 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('verification')->isRequired()->cannotBeEmpty()->end()
                         ->scalarNode('start_button_payload')->defaultNull()->end()
                         ->arrayNode('greeting')
+                            ->validate()
+                                ->always(function($v) {
+                                    foreach ($v as ['locale' => $locale]) {
+                                        if (isset($locales[$locale])) {
+                                            throw new InvalidConfigurationException('Duplicated `botman.drivers.facebook.greeting.locale`: `'.$locale.'`.');
+                                        }
+
+                                        $locales[$locale] = 1;
+                                    }
+
+                                    if (!isset($locales['default'])) {
+                                        throw new InvalidConfigurationException('Default locale must be defined in `botman.drivers.facebook.greeting.locale`.');
+                                    }
+
+                                    return $v;
+                                })
+                            ->end()
                             ->requiresAtLeastOneElement()
                             ->arrayPrototype()
                                 ->children()
                                     ->scalarNode('locale')->isRequired()->cannotBeEmpty()->end()
                                     ->scalarNode('text')->isRequired()->cannotBeEmpty()->end()
                                 ->end()
-                            ->end()
-                            ->validate()
-                                ->ifTrue(function (array $greetings): bool {
-                                    return !\array_reduce($greetings, function ($carry, $greeting) {
-                                        return $carry || 'default' === $greeting['locale'];
-                                    }, false);
-                                })
-                                ->thenInvalid('Default locale must be defined.')
-                                ->ifEmpty()
-                                ->thenUnset()
                             ->end()
                         ->end()
                         ->arrayNode('whitelisted_domains')
