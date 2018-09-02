@@ -12,7 +12,7 @@
 
         <service id="Sgomez\Bundle\BotmanBundle\Services\Http\TelegramClient" alias="botman.driver.telegram.client" />
 
-        <service id="Sgomez\Bundle\BotmanBundle\Command\TelegramMeCommand">
+        <service id="Sgomez\Bundle\BotmanBundle\Command\TelegramInfoCommand">
             <argument type="service" id="botman.driver.telegram.client" />
             <tag name="console.command" />
         </service>

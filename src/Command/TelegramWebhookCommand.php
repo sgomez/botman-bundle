@@ -51,6 +51,7 @@ class TelegramWebhookCommand extends Command
     {
         $this
             ->setName('botman:telegram:webhook')
+            ->setDescription('Configure the system webhook to be used by Telegram bot')
             ->addOption('unset', null, InputOption::VALUE_NONE, 'Remove webhook')
             ->addArgument('url', InputArgument::OPTIONAL, 'Custom webhook url')
         ;
