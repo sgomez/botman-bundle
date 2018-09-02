@@ -41,9 +41,11 @@ class Configuration implements ConfigurationInterface
                         ->thenInvalid('Webhook controller class \'%s\' does not exist')
                     ->end()
                 ->end()
+
                 ->scalarNode('path')
                     ->defaultValue('/botman')
                 ->end()
+
                 ->arrayNode('drivers')
                     ->children()
                         ->append($this->addTelegramConfiguration())
@@ -73,6 +75,7 @@ class Configuration implements ConfigurationInterface
                         ->thenInvalid('Class \'%s\' must be a valid Facebook BotMan driver.')
                     ->end()
                 ->end()
+
                 ->arrayNode('parameters')
                     ->isRequired()
                     ->children()
@@ -82,10 +85,13 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('start_button_payload')->defaultNull()->end()
                         ->arrayNode('greeting')
                             ->validate()
-                                ->always(function($v) {
+                                ->always(function ($v) {
                                     foreach ($v as ['locale' => $locale]) {
                                         if (isset($locales[$locale])) {
-                                            throw new InvalidConfigurationException('Duplicated `botman.drivers.facebook.greeting.locale`: `'.$locale.'`.');
+                                            throw new InvalidConfigurationException(sprintf(
+                                                'Duplicated `botman.drivers.facebook.greeting.locale`: `%s`.',
+                                                $locale
+                                            ));
                                         }
 
                                         $locales[$locale] = 1;
@@ -133,6 +139,7 @@ class Configuration implements ConfigurationInterface
                         ->thenInvalid('Class \'%s\' must be a valid Telegram BotMan driver.')
                     ->end()
                 ->end()
+
                 ->arrayNode('parameters')
                     ->isRequired()
                     ->children()
@@ -153,8 +160,13 @@ class Configuration implements ConfigurationInterface
         $node
             ->addDefaultsIfNotSet()
             ->children()
-                ->scalarNode('client')->defaultValue('httplug.client.default')->end()
-                ->scalarNode('message_factory')->defaultValue('httplug.message_factory.default')->end()
+                ->scalarNode('client')
+                    ->defaultValue('httplug.client.default')
+                ->end()
+
+                ->scalarNode('message_factory')
+                    ->defaultValue('httplug.message_factory.default')
+                ->end()
             ->end()
         ;
 
